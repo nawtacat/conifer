@@ -200,7 +200,7 @@
             }
         });
 
-        // --- FETCH LIBRARY ---
+        // --- FETCH LIBRARY & RENDER ---
         async function fetchUserBooks() {
             if (!currentUserInstance) return;
 
@@ -231,6 +231,12 @@
                     <h3 class="font-serif text-sm truncate font-medium">${bookData.title}</h3>
                     <p class="text-xs opacity-50 uppercase tracking-widest mt-1">${bookData.status === 'processing' ? 'Analyzing...' : 'Ready to Read'}</p>
                 `;
+
+                // ---> THE ROUTING LOGIC: Click a book, go to read.html <---
+                bookCard.addEventListener('click', () => {
+                    window.location.href = `/read.html?book=${doc.id}`;
+                });
+
                 booksGrid.appendChild(bookCard);
             });
         }
