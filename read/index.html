@@ -137,6 +137,8 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const storage = getStorage(app);
+
+        // Global worker setup for PDF.js
         const functions = getFunctions(app);
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -177,7 +179,14 @@
         async function loadPdf(storagePath) {
             try {
                 const pdfUrl = await getDownloadURL(ref(storage, storagePath));
-                const loadingTask = pdfjsLib.getDocument(pdfUrl);
+                
+                // Using more robust loading parameters
+                const loadingTask = pdfjsLib.getDocument({
+                    url: pdfUrl,
+                    cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
+                    cMapPacked: true,
+                });
+                
                 pdfDoc = await loadingTask.promise;
                 displayPage(1);
             } catch (error) {
@@ -203,8 +212,16 @@
 
             try {
                 const page = await pdfDoc.getPage(pageNum);
-                const textContent = await page.getTextContent();
-                const rawText = textContent.items.map(item => item.str).join(' ');
+                const textItem = await page.getTextContent();
+                
+                // Extract text with better handling of spaces
+                let rawText = "";
+                let lastY;
+                for (let item of textItem.items) {
+                    if (lastY !== undefined && lastY !== item.transform[5]) rawText += "\n";
+                    rawText += item.str + " ";
+                    lastY = item.transform[5];
+                }
 
                 const idToken = await auth.currentUser.getIdToken();
                 const response = await fetch('https://us-central1-conifer-7cfdf.cloudfunctions.net/cleanPageText', {
