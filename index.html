@@ -169,7 +169,6 @@
         let currentUserInstance = null;
         let currentMode = 'login';
 
-        // UI DOM Elements
         const authActionBtn = document.getElementById('auth-action-btn');
         const landingView = document.getElementById('landing-view');
         const libraryView = document.getElementById('library-view');
@@ -177,7 +176,6 @@
         const authModal = document.getElementById('auth-modal');
         const authForm = document.getElementById('auth-form');
 
-        // --- AUTH STATE LISTENER ---
         onAuthStateChanged(auth, (user) => {
             if (user && user.emailVerified) {
                 currentUserInstance = user;
@@ -200,7 +198,6 @@
             }
         });
 
-        // --- FETCH LIBRARY & RENDER ---
         async function fetchUserBooks() {
             if (!currentUserInstance) return;
 
@@ -232,7 +229,6 @@
                     <p class="text-xs opacity-50 uppercase tracking-widest mt-1">${bookData.status === 'processing' ? 'Analyzing...' : 'Ready to Read'}</p>
                 `;
 
-                // ---> THE ROUTING LOGIC: Click a book, go to read.html <---
                 bookCard.addEventListener('click', () => {
                     window.location.href = `/read.html?book=${doc.id}`;
                 });
@@ -241,22 +237,14 @@
             });
         }
 
-        // --- EVENT LISTENERS ---
-
-        // Login / Logout Button
         authActionBtn.addEventListener('click', async () => {
             if (currentUserInstance) {
-                try {
-                    await signOut(auth);
-                } catch (error) {
-                    console.error("Logout error:", error);
-                }
+                try { await signOut(auth); } catch (error) { console.error("Logout error:", error); }
             } else {
                 openAuthModal('login');
             }
         });
 
-        // Upload Buttons
         const triggerUpload = () => {
             if (!currentUserInstance || !currentUserInstance.emailVerified) {
                 openAuthModal('login');
@@ -271,7 +259,6 @@
         document.getElementById('nav-upload-btn').addEventListener('click', triggerUpload);
         document.getElementById('hero-upload-btn').addEventListener('click', triggerUpload);
 
-        // File Selection Logic
         document.getElementById('pdf-upload-input').addEventListener('change', async (event) => {
             const file = event.target.files[0];
             if (!file) return;
@@ -311,7 +298,6 @@
             }
         });
 
-        // Modal Controls
         function openAuthModal(forcedMode = 'login') {
             currentMode = forcedMode;
             authModal.classList.remove('hidden');
@@ -354,7 +340,6 @@
             }
         }
 
-        // Form Submission
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('auth-email').value;
@@ -390,7 +375,6 @@
             }
         });
 
-        // Toggle Theme & Library View
         document.getElementById('nav-theme-btn').addEventListener('click', () => {
             const htmlClasses = document.documentElement.classList;
             const isDark = htmlClasses.contains('dark');
