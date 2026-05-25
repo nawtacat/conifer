@@ -236,7 +236,8 @@
                 const data = await response.json();
                 if (response.ok) {
                     const cleaned = data.result || "";
-                    pageContentDiv.innerHTML = cleaned.split('\n').filter(p => p.trim()).map(p => `<p>${p}</p>`).join('');
+                    // Wrap paragraphs in div for spacing and ensure we handle double newlines from AI
+                    pageContentDiv.innerHTML = cleaned.split(/\n+/).filter(p => p.trim()).map(p => `<p class="mb-6">${p.trim()}</p>`).join('');
                     document.getElementById('reader-container').scrollTop = 0;
                 } else {
                     pageContentDiv.innerHTML = `<p class="text-red-500">Error: ${data.error}</p>`;
@@ -262,7 +263,7 @@
             if (text.length > 0 && selection.anchorNode && readerContainer.contains(selection.anchorNode)) {
                 currentSelection = text;
                 aiEmptyState.classList.add('hidden');
-                aiActiveState.classList.remove('hidden');
+                aiActiveState.classList.remove('hidden', 'flex'); // Reset classes
                 aiActiveState.classList.add('flex');
                 selectedTextDisplay.textContent = text.length > 150 ? text.substring(0, 150) + '...' : `"${text}"`;
                 aiResponseContainer.classList.add('hidden');
