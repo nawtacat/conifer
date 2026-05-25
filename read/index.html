@@ -29,7 +29,6 @@
         ::-webkit-scrollbar-thumb { background: #d4d4d4; border-radius: 4px; }
         html.dark ::-webkit-scrollbar-thumb { background: #404040; }
         
-        /* Custom highlight styling for the reader */
         ::selection {
             background: rgba(0, 0, 0, 0.1);
         }
@@ -111,6 +110,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB01oxW2KmncUZeg0l-lP-e5kZXnXW28Ug",
@@ -125,19 +125,20 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const functions = getFunctions(app);
 
-        // 1. Get Book ID from URL (?book=abc123)
+        const explainText = httpsCallable(functions, 'explainText');
+
         const urlParams = new URLSearchParams(window.location.search);
         const bookId = urlParams.get('book');
 
         if (!bookId) {
-            window.location.href = '/index.html'; // Kick out if no book specified
+            window.location.href = '/index.html';
         }
 
-        // 2. Authenticate and Load Book Metadata
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
-                window.location.href = '/index.html'; // Kick out if not logged in
+                window.location.href = '/index.html'; 
                 return;
             }
 
@@ -145,27 +146,17 @@
                 const bookRef = doc(db, "books", bookId);
                 const bookSnap = await getDoc(bookRef);
 
-                if (bookSnap.exists()) {
-                    // Verify ownership (Security measure on frontend)
-                    if (bookSnap.data().ownerId !== user.uid) {
-                        alert("You do not have permission to read this book.");
-                        window.location.href = '/index.html';
-                        return;
-                    }
-                    
+                if (bookSnap.exists() && bookSnap.data().ownerId === user.uid) {
                     document.getElementById('book-title-display').textContent = bookSnap.data().title;
-                    
-                    // FUTURE: Here we will fetch the parsed HTML from the 'pages' collection
-                    // For now, it leaves the placeholder text on screen for testing.
                 } else {
-                    document.getElementById('book-title-display').textContent = "Book not found";
+                    alert("You do not have permission to read this book.");
+                    window.location.href = '/index.html';
                 }
             } catch (error) {
                 console.error("Error fetching book:", error);
             }
         });
 
-        // 3. Text Selection Engine
         const readerContainer = document.getElementById('reader-container');
         const aiEmptyState = document.getElementById('ai-empty-state');
         const aiActiveState = document.getElementById('ai-active-state');
@@ -175,64 +166,51 @@
 
         let currentSelection = "";
 
-        // Listen for mouse up (finish highlighting) inside the reader text
         document.addEventListener('selectionchange', () => {
             const selection = window.getSelection();
             const text = selection.toString().trim();
 
             if (text.length > 0 && selection.anchorNode && readerContainer.contains(selection.anchorNode)) {
                 currentSelection = text;
-                
-                // Swap Sidebar UI
                 aiEmptyState.classList.add('hidden');
                 aiActiveState.classList.remove('hidden');
                 aiActiveState.classList.add('flex');
-                
-                // Truncate display if selection is massive
                 selectedTextDisplay.textContent = text.length > 150 ? text.substring(0, 150) + '...' : `"${text}"`;
-                
-                // Hide previous analysis
                 aiResponseContainer.classList.add('hidden');
             }
         });
 
-        // 4. Mock AI Request (To be replaced with your Firebase Callable Function later)
-        document.getElementById('btn-explain').addEventListener('click', () => {
+        // Real AI Request Trigger connected to Gemini
+        async function requestAIAnalysis(actionType) {
             if (!currentSelection) return;
             
             aiResponseContainer.classList.remove('hidden');
-            aiResponseText.innerHTML = `<span class="animate-pulse">Analyzing text context...</span>`;
+            aiResponseText.innerHTML = `<span class="animate-pulse opacity-60">Consulting Conifer AI...</span>`;
 
-            // Simulate network latency
-            setTimeout(() => {
-                aiResponseText.innerHTML = `<strong class="font-semibold">In simple terms:</strong> This passage explains that light behaves as both a wave and a particle (photon). Understanding this concept is the foundation of quantum mechanics.`;
-            }, 1200);
-        });
+            try {
+                const result = await explainText({ text: currentSelection, action: actionType });
+                aiResponseText.innerHTML = result.data.result;
+            } catch (error) {
+                console.error("AI Assistant error:", error);
+                aiResponseText.innerHTML = `<span class="text-red-600 dark:text-red-400">Error connecting to the AI. Check console.</span>`;
+            }
+        }
 
-        document.getElementById('btn-translate').addEventListener('click', () => {
-            if (!currentSelection) return;
-            aiResponseContainer.classList.remove('hidden');
-            aiResponseText.innerHTML = `<span class="animate-pulse">Translating...</span>`;
-            
-            setTimeout(() => {
-                aiResponseText.innerHTML = `This feature will connect to the Gemini translation node.`;
-            }, 800);
-        });
+        document.getElementById('btn-explain').addEventListener('click', () => requestAIAnalysis('explain'));
+        document.getElementById('btn-translate').addEventListener('click', () => requestAIAnalysis('translate'));
 
-        // --- THEME TOGGLE ---
         document.getElementById('nav-theme-btn').addEventListener('click', () => {
             const htmlClasses = document.documentElement.classList;
+            htmlClasses.toggle('dark');
             const isDark = htmlClasses.contains('dark');
             const sidebarLogo = document.getElementById('sidebar-logo');
             const themeIcon = document.getElementById('theme-icon');
 
             if (isDark) {
-                htmlClasses.remove('dark');
-                if(sidebarLogo) sidebarLogo.src = 'https://conifer.ink/img/coniferBlack.png';
+                if(sidebarLogo) sidebarLogo.src = 'https://conifer.ink/img/coniferWhite.png';
                 themeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>';
             } else {
-                htmlClasses.add('dark');
-                if(sidebarLogo) sidebarLogo.src = 'https://conifer.ink/img/coniferWhite.png';
+                if(sidebarLogo) sidebarLogo.src = 'https://conifer.ink/img/coniferBlack.png';
                 themeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>';
             }
         });
