@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conifer | Read Smarter</title>
+    
+    <link rel="preconnect" href="[https://fonts.googleapis.com](https://fonts.googleapis.com)">
+    <link rel="preconnect" href="[https://fonts.gstatic.com](https://fonts.gstatic.com)" crossorigin>
+    <link href="[https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap)" rel="stylesheet">
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    
+    <script src="[https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js](https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js)"></script>
+    <script>
+        tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { serif: ['Merriweather', 'serif'], sans: ['Inter', 'sans-serif'], } } } }
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '[https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js](https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js)';
+    </script>
+</head>
+<body class="bg-white text-black dark:bg-black dark:text-white font-sans antialiased min-h-screen flex flex-col transition-colors duration-300">
+
+    <nav class="w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center relative z-10 border-b border-black/10 dark:border-white/10">
+        <div class="flex items-center space-x-2">
+            <img id="brand-logo" src="[https://conifer.ink/img/coniferBlack.png](https://conifer.ink/img/coniferBlack.png)" alt="Conifer Logo" class="h-10 w-auto">
+        </div>
+        <div class="flex items-center space-x-4">
+            <button id="nav-theme-btn" class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+                <svg id="theme-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+            <button id="auth-action-btn" class="text-sm font-medium hover:opacity-60 transition-opacity">Log in</button>
+            <input type="file" id="pdf-upload-input" accept="application/pdf" class="hidden">
+            <button id="nav-upload-btn" class="bg-black text-white dark:bg-white dark:text-black px-6 py-2.5 rounded-full text-sm font-medium hover:opacity-80 transition-opacity">Upload Book</button>
+        </div>
+    </nav>
+
+    <div id="upload-overlay" class="fixed inset-0 bg-white/90 dark:bg-black/90 backdrop-blur-md z-50 hidden flex-col items-center justify-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-black dark:border-white mb-6"></div>
+        <p class="font-serif text-2xl mb-2" id="upload-status-text">Scanning Book...</p>
+        <p class="text-sm opacity-60" id="upload-subtext">AI is reading the cover pages</p>
+    </div>
+
+    <main id="library-view" class="flex-grow flex flex-col pt-12 pb-24 px-6 max-w-7xl mx-auto w-full">
+        <div class="flex justify-between items-end mb-8 border-b border-black/10 dark:border-white/10 pb-4">
+            <h2 class="font-serif text-3xl">Your Library</h2>
+        </div>
+        <div id="books-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6"></div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "[https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js](https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js)";
+        import { getAuth, onAuthStateChanged, signInAnonymously } from "[https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js](https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js)";
+        import { getStorage, ref, uploadBytes, deleteObject } from "[https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js](https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js)";
+        import { getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp, doc, updateDoc, deleteDoc } from "[https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js](https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js)";
+
+        const app = initializeApp({
+            apiKey: "AIzaSyB01oxW2KmncUZeg0l-lP-e5kZXnXW28Ug",
+            authDomain: "conifer-7cfdf.firebaseapp.com",
+            projectId: "conifer-7cfdf",
+            storageBucket: "conifer-7cfdf.firebasestorage.app"
+        });
+
+        const auth = getAuth(app);
+        const storage = getStorage(app);
+        const db = getFirestore(app);
+
+        // Elegant background colors for book covers
+        const coverColors = ['bg-stone-800', 'bg-emerald-950', 'bg-indigo-950', 'bg-amber-950', 'bg-rose-950'];
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('auth-action-btn').textContent = "Log out";
+                fetchUserBooks(); 
+            } else {
+                signInAnonymously(auth); // Keep it simple for testing
+            }
+        });
+
+        async function fetchUserBooks() {
+            const user = auth.currentUser;
+            if (!user) return;
+
+            const grid = document.getElementById('books-grid');
+            const q = query(collection(db, "books"), where("ownerId", "==", user.uid));
+            const querySnapshot = await getDocs(q);
+
+            grid.innerHTML = '';
+
+            querySnapshot.forEach((docSnap) => {
+                const book = docSnap.data();
+                const bookId = docSnap.id;
+                
+                // Deterministic color based on title length
+                const colorClass = coverColors[book.title.length % coverColors.length];
+
+                const card = document.createElement('div');
+                card.className = "group relative flex flex-col";
+                card.innerHTML = `
+                    <div onclick="window.location.href='/read.html?book=${bookId}'" class="cursor-pointer aspect-[2/3] w-full ${colorClass} rounded-md shadow-md group-hover:shadow-2xl transition-all group-hover:-translate-y-2 p-5 flex flex-col justify-between text-white border border-white/10">
+                        <div>
+                            <h3 class="font-serif text-lg leading-snug line-clamp-4 font-semibold shadow-black drop-shadow-md">${book.title}</h3>
+                            <p class="text-xs mt-3 opacity-80 uppercase tracking-widest">${book.author || "Unknown"}</p>
+                        </div>
+                        <img src="[https://conifer.ink/img/coniferWhite.png](https://conifer.ink/img/coniferWhite.png)" class="h-6 w-auto opacity-40 self-start" alt="logo">
+                    </div>
+                    
+                    <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1 z-10">
+                        <button onclick="renameBook('${bookId}', '${book.title.replace(/'/g, "\\'")}')" class="bg-black/60 hover:bg-black text-white p-2 rounded backdrop-blur-sm text-xs">✏️</button>
+                        <button onclick="deleteBook('${bookId}', '${book.storagePath}')" class="bg-red-500/80 hover:bg-red-600 text-white p-2 rounded backdrop-blur-sm text-xs">🗑</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Expose to window for inline onclick handlers
+        window.renameBook = async (id, currentTitle) => {
+            const newTitle = prompt("Enter a new title for this book:", currentTitle);
+            if (newTitle && newTitle.trim() !== "") {
+                await updateDoc(doc(db, "books", id), { title: newTitle.trim() });
+                fetchUserBooks();
+            }
+        };
+
+        window.deleteBook = async (id, storagePath) => {
+            if (confirm("Are you sure you want to permanently delete this book?")) {
+                try {
+                    await deleteObject(ref(storage, storagePath)); // Delete PDF
+                    await deleteDoc(doc(db, "books", id));         // Delete Database entry
+                    fetchUserBooks();
+                } catch (error) {
+                    console.error("Error deleting:", error);
+                    alert("Could not delete book completely.");
+                }
+            }
+        };
+
+        document.getElementById('nav-upload-btn').addEventListener('click', () => document.getElementById('pdf-upload-input').click());
+
+        document.getElementById('pdf-upload-input').addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file || file.type !== "application/pdf") return alert("Please upload a PDF.");
+
+            const overlay = document.getElementById('upload-overlay');
+            const statusText = document.getElementById('upload-status-text');
+            const subText = document.getElementById('upload-subtext');
+            overlay.classList.remove('hidden'); overlay.classList.add('flex');
+
+            try {
+                // 1. Extract text from first 3 pages locally
+                const fileUrl = URL.createObjectURL(file);
+                const pdf = await pdfjsLib.getDocument(fileUrl).promise;
+                let introText = "";
+                
+                const pagesToScan = Math.min(3, pdf.numPages);
+                for (let i = 1; i <= pagesToScan; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    introText += textContent.items.map(item => item.str).join(" ") + "\n";
+                }
+
+                // 2. Ask AI to find Title and Author
+                statusText.textContent = "AI is thinking...";
+                subText.textContent = "Identifying book metadata";
+                
+                let bookTitle = file.name.replace('.pdf', '');
+                let bookAuthor = "Unknown Author";
+
+                if (introText.trim().length > 20) {
+                    const idToken = await auth.currentUser.getIdToken();
+                    const aiRes = await fetch('[https://us-central1-conifer-7cfdf.cloudfunctions.net/extractBookInfo](https://us-central1-conifer-7cfdf.cloudfunctions.net/extractBookInfo)', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+                        body: JSON.stringify({ data: { text: introText.substring(0, 3000) } })
+                    });
+                    const aiData = await aiRes.json();
+                    if (aiData.result && aiData.result.title) {
+                        bookTitle = aiData.result.title;
+                        bookAuthor = aiData.result.author;
+                    }
+                }
+
+                // 3. Upload File
+                statusText.textContent = "Uploading PDF...";
+                subText.textContent = "Saving to your secure library";
+                const storagePath = `users/${auth.currentUser.uid}/books/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`;
+                await uploadBytes(ref(storage, storagePath), file);
+
+                // 4. Save to Database
+                await addDoc(collection(db, "books"), {
+                    title: bookTitle,
+                    author: bookAuthor,
+                    ownerId: auth.currentUser.uid,
+                    storagePath: storagePath,
+                    uploadedAt: serverTimestamp()
+                });
+
+                await fetchUserBooks();
+            } catch (error) {
+                console.error(error);
+                alert("Upload failed.");
+            } finally {
+                overlay.classList.add('hidden'); overlay.classList.remove('flex');
+                event.target.value = ''; 
+            }
+        });
+    </script>
+</body>
+</html>
