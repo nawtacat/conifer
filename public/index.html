@@ -1,1 +1,412 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conifer | Read Smarter. Deepen Your Understanding.</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['Merriweather', 'Georgia', 'serif'],
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d4d4d4; border-radius: 4px; }
+        html.dark ::-webkit-scrollbar-thumb { background: #404040; }
+    </style>
+</head>
+<body class="bg-white text-black dark:bg-black dark:text-white font-sans antialiased min-h-screen flex flex-col transition-colors duration-300">
 
+    <nav class="w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center relative z-10 border-b border-black/10 dark:border-white/10">
+        <div class="flex items-center space-x-2">
+            <img id="brand-logo" src="https://conifer.ink/img/coniferBlack.png" alt="Conifer Logo" class="h-10 w-auto">
+        </div>
+        
+        <div class="hidden md:flex space-x-8 text-sm font-medium">
+            <button id="nav-library-btn" class="hidden hover:opacity-60 transition-opacity">My Library</button>
+            <a href="#" class="hover:opacity-60 transition-opacity">Explore</a>
+        </div>
+        
+        <div class="flex items-center space-x-4">
+            <button id="nav-theme-btn" class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+                <svg id="theme-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                </svg>
+            </button>
+
+            <span id="user-greeting" class="text-sm hidden opacity-60 font-medium"></span>
+            <button id="auth-action-btn" class="text-sm font-medium hover:opacity-60 transition-opacity">Log in</button>
+            
+            <input type="file" id="pdf-upload-input" accept="application/pdf" class="hidden">
+            
+            <button id="nav-upload-btn" class="bg-black text-white dark:bg-white dark:text-black px-6 py-2.5 rounded-full text-sm font-medium hover:opacity-80 transition-opacity">
+                Upload Book
+            </button>
+        </div>
+    </nav>
+
+    <div id="upload-overlay" class="fixed inset-0 bg-white/80 dark:bg-black/80 backdrop-blur-sm z-50 hidden flex-col items-center justify-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-black dark:border-white mb-4"></div>
+        <p class="font-serif text-xl" id="upload-status-text">Uploading to Library...</p>
+    </div>
+
+    <main id="landing-view" class="flex-grow flex flex-col items-center pt-20 pb-24 px-6 relative z-10">
+        <div class="w-full max-w-4xl mx-auto text-center space-y-8">
+            <h1 class="font-serif text-5xl md:text-6xl lg:text-7xl leading-tight">
+                Read Smarter.<br>
+                <span class="italic font-light opacity-60">Deepen Your Understanding.</span>
+            </h1>
+            <p class="text-lg md:text-xl max-w-2xl mx-auto leading-relaxed opacity-80">
+                Transform dense PDFs into effortless reading. Conifer breaks down complex texts and explains concepts on the fly.
+            </p>
+            <div class="flex justify-center pt-4">
+                <button id="hero-upload-btn" class="bg-black text-white dark:bg-white dark:text-black px-8 py-3.5 rounded-full text-base font-medium hover:opacity-80 transition-opacity">
+                    Upload Your PDF
+                </button>
+            </div>
+        </div>
+
+        <div class="w-full max-w-5xl mx-auto mt-24 border border-black/20 dark:border-white/20 rounded-xl overflow-hidden flex flex-col md:flex-row">
+            <div class="w-full md:w-2/3 p-8 md:p-12 border-b md:border-b-0 md:border-r border-black/20 dark:border-white/20">
+                <div class="flex items-center space-x-2 mb-8"><span class="text-xs font-semibold uppercase tracking-widest opacity-50">Smart Paragraphize</span></div>
+                <h2 class="font-serif text-3xl mb-6">The Nature of Light</h2>
+                <p class="font-serif text-lg leading-relaxed mb-6 opacity-90">In the early 20th century, the scientific community grappled with a profound contradiction. Light, previously understood as a continuous wave, began exhibiting behaviors that could only be explained if it were composed of discrete packets of energy.</p>
+                <p class="font-serif text-lg leading-relaxed opacity-90">
+                    <span class="bg-black/10 dark:bg-white/20 border-b border-black dark:border-white px-1 cursor-pointer">These packets, later termed photons, introduced the concept of wave-particle duality.</span> 
+                    This shift fundamentally disrupted classical mechanics and laid the groundwork for modern quantum physics.
+                </p>
+            </div>
+            <div class="w-full md:w-1/3 p-6 md:p-8 flex flex-col bg-black/5 dark:bg-white/5">
+                <div class="flex items-center mb-8">
+                    <img id="sidebar-logo" src="https://conifer.ink/img/coniferBlack.png" alt="Icon" class="h-5 w-auto mr-3 opacity-50">
+                    <span class="text-xs font-semibold uppercase tracking-widest opacity-50">AI Explanation</span>
+                </div>
+                <div class="bg-white dark:bg-black p-6 rounded-lg border border-black/20 dark:border-white/20">
+                    <p class="text-sm mb-4 border-l-2 border-black/20 dark:border-white/20 pl-4 italic opacity-70">"These packets, later termed photons..."</p>
+                    <p class="text-sm leading-relaxed opacity-90"><strong class="font-semibold">In simple terms:</strong> Imagine light is both a flowing river (a wave) and a handful of thrown pebbles (particles).</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <main id="library-view" class="flex-grow hidden flex-col pt-12 pb-24 px-6 max-w-7xl mx-auto w-full">
+        <div class="flex justify-between items-end mb-8 border-b border-black/10 dark:border-white/10 pb-4">
+            <h2 class="font-serif text-3xl">Your Library</h2>
+        </div>
+        
+        <div id="books-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            <div id="empty-state" class="col-span-full text-center py-20 opacity-50">
+                <p>Your library is empty. Upload a PDF to begin.</p>
+            </div>
+        </div>
+    </main>
+
+    <div id="auth-modal" class="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-stone-900 w-full max-w-md border border-black/20 dark:border-white/10 rounded-xl p-8 relative shadow-2xl">
+            <button id="modal-close-btn" class="absolute top-4 right-4 text-xl font-medium opacity-40 hover:opacity-100">&times;</button>
+            
+            <h3 id="modal-title" class="font-serif text-2xl mb-2">Welcome to Conifer</h3>
+            <p id="modal-subtitle" class="text-sm opacity-60 mb-6">Log in to open your digital library shelves.</p>
+            
+            <div id="auth-error" class="hidden text-xs bg-red-50 text-red-600 p-3 rounded-md mb-4 border border-red-200/50"></div>
+            <div id="auth-success" class="hidden text-xs bg-green-50 text-green-600 p-3 rounded-md mb-4 border border-green-200/50"></div>
+
+            <form id="auth-form" class="space-y-4">
+                <div>
+                    <input type="email" id="auth-email" placeholder="Email Address" required class="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-md px-4 py-2.5 text-sm focus:outline-none focus:border-black dark:focus:border-white">
+                </div>
+                <div>
+                    <input type="password" id="auth-password" placeholder="Password (min 6 characters)" required minlength="6" class="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-md px-4 py-2.5 text-sm focus:outline-none focus:border-black dark:focus:border-white">
+                </div>
+                <button type="submit" id="auth-submit-btn" class="w-full bg-black text-white dark:bg-white dark:text-black py-3 rounded-md text-sm font-medium hover:opacity-90 transition-opacity">
+                    Log In
+                </button>
+            </form>
+
+            <div class="mt-6 pt-4 border-t border-black/5 dark:border-white/5 text-center text-xs">
+                <span id="switch-prompt-text">Don't have an account?</span>
+                <button id="switch-mode-btn" class="font-semibold underline ml-1">Sign Up</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getStorage, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB01oxW2KmncUZeg0l-lP-e5kZXnXW28Ug",
+            authDomain: "conifer-7cfdf.firebaseapp.com",
+            projectId: "conifer-7cfdf",
+            storageBucket: "conifer-7cfdf.firebasestorage.app",
+            messagingSenderId: "1039452913173",
+            appId: "1:1039452913173:web:df20012ad1dfb2a42b181c",
+            measurementId: "G-KZCHEGCFQL"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const storage = getStorage(app);
+        const db = getFirestore(app);
+
+        let currentUserInstance = null;
+        let currentMode = 'login';
+
+        const authActionBtn = document.getElementById('auth-action-btn');
+        const landingView = document.getElementById('landing-view');
+        const libraryView = document.getElementById('library-view');
+        const navLibBtn = document.getElementById('nav-library-btn');
+        const authModal = document.getElementById('auth-modal');
+        const authForm = document.getElementById('auth-form');
+
+        onAuthStateChanged(auth, (user) => {
+            if (user && user.emailVerified) {
+                currentUserInstance = user;
+                authActionBtn.textContent = "Log out";
+                
+                landingView.classList.add('hidden');
+                libraryView.classList.remove('hidden');
+                libraryView.classList.add('flex');
+                navLibBtn.classList.remove('hidden');
+                
+                fetchUserBooks(); 
+            } else {
+                currentUserInstance = null;
+                authActionBtn.textContent = "Log in";
+                
+                landingView.classList.remove('hidden');
+                libraryView.classList.add('hidden');
+                libraryView.classList.remove('flex');
+                navLibBtn.classList.add('hidden');
+            }
+        });
+
+        async function fetchUserBooks() {
+            if (!currentUserInstance) return;
+
+            const booksGrid = document.getElementById('books-grid');
+            const emptyState = document.getElementById('empty-state');
+            
+            const q = query(collection(db, "books"), where("ownerId", "==", currentUserInstance.uid));
+            const querySnapshot = await getDocs(q);
+
+            booksGrid.innerHTML = '';
+
+            if (querySnapshot.empty) {
+                booksGrid.appendChild(emptyState);
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            querySnapshot.forEach((doc) => {
+                const bookData = doc.data();
+                const bookCard = document.createElement('div');
+                bookCard.className = "group cursor-pointer flex flex-col";
+                
+                bookCard.innerHTML = `
+                    <div class="aspect-[2/3] w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-md mb-3 flex items-center justify-center relative overflow-hidden transition-transform group-hover:-translate-y-1">
+                        <img src="https://conifer.ink/img/coniferBlack.png" class="h-8 opacity-20 dark:hidden" alt="cover logo">
+                        <img src="https://conifer.ink/img/coniferWhite.png" class="h-8 opacity-20 hidden dark:block" alt="cover logo">
+                    </div>
+                    <h3 class="font-serif text-sm truncate font-medium">${bookData.title}</h3>
+                    <p class="text-xs opacity-50 uppercase tracking-widest mt-1">${bookData.status === 'processing' ? 'Analyzing...' : 'Ready to Read'}</p>
+                `;
+
+                bookCard.addEventListener('click', () => {
+                    window.location.href = `/read.html?book=${doc.id}`;
+                });
+
+                booksGrid.appendChild(bookCard);
+            });
+        }
+
+        authActionBtn.addEventListener('click', async () => {
+            if (currentUserInstance) {
+                try { await signOut(auth); } catch (error) { console.error("Logout error:", error); }
+            } else {
+                openAuthModal('login');
+            }
+        });
+
+        const triggerUpload = () => {
+            if (!currentUserInstance || !currentUserInstance.emailVerified) {
+                openAuthModal('login');
+                const errorDiv = document.getElementById('auth-error');
+                errorDiv.textContent = "Please log in and verify your email to upload books.";
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            document.getElementById('pdf-upload-input').click();
+        };
+        
+        document.getElementById('nav-upload-btn').addEventListener('click', triggerUpload);
+        document.getElementById('hero-upload-btn').addEventListener('click', triggerUpload);
+
+        document.getElementById('pdf-upload-input').addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.type !== "application/pdf") {
+                alert("Please upload a valid PDF file.");
+                return;
+            }
+
+            const overlay = document.getElementById('upload-overlay');
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+
+            try {
+                const cleanFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+                const storagePath = `users/${currentUserInstance.uid}/books/${Date.now()}_${cleanFileName}`;
+                const storageRef = ref(storage, storagePath);
+                
+                await uploadBytes(storageRef, file);
+
+                await addDoc(collection(db, "books"), {
+                    title: file.name.replace('.pdf', ''),
+                    ownerId: currentUserInstance.uid,
+                    storagePath: storagePath,
+                    uploadedAt: serverTimestamp(),
+                    status: "processing"
+                });
+
+                await fetchUserBooks();
+            } catch (error) {
+                console.error("Upload Error:", error);
+                alert("Failed to upload book. Ensure your Firebase Rules are set correctly.");
+            } finally {
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+                event.target.value = ''; 
+            }
+        });
+
+        function openAuthModal(forcedMode = 'login') {
+            currentMode = forcedMode;
+            authModal.classList.remove('hidden');
+            document.getElementById('auth-error').classList.add('hidden');
+            document.getElementById('auth-success').classList.add('hidden');
+            updateModalUIStyle();
+        }
+
+        document.getElementById('modal-close-btn').addEventListener('click', () => {
+            authModal.classList.add('hidden');
+            authForm.reset();
+        });
+
+        document.getElementById('switch-mode-btn').addEventListener('click', () => {
+            currentMode = currentMode === 'login' ? 'signup' : 'login';
+            document.getElementById('auth-error').classList.add('hidden');
+            document.getElementById('auth-success').classList.add('hidden');
+            updateModalUIStyle();
+        });
+
+        function updateModalUIStyle() {
+            const title = document.getElementById('modal-title');
+            const subtitle = document.getElementById('modal-subtitle');
+            const submitBtn = document.getElementById('auth-submit-btn');
+            const promptText = document.getElementById('switch-prompt-text');
+            const switchBtn = document.getElementById('switch-mode-btn');
+
+            if (currentMode === 'login') {
+                title.textContent = "Welcome back";
+                subtitle.textContent = "Log in to open your digital library shelves.";
+                submitBtn.textContent = "Log In";
+                promptText.textContent = "Don't have an account?";
+                switchBtn.textContent = "Sign Up";
+            } else {
+                title.textContent = "Create your account";
+                subtitle.textContent = "Start building your effortless English reading habit today.";
+                submitBtn.textContent = "Create Account & Send Verification";
+                promptText.textContent = "Already have an account?";
+                switchBtn.textContent = "Log In";
+            }
+        }
+
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            const errorDiv = document.getElementById('auth-error');
+            const successDiv = document.getElementById('auth-success');
+
+            errorDiv.classList.add('hidden');
+            successDiv.classList.add('hidden');
+
+            try {
+                if (currentMode === 'login') {
+                    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                    if (!userCredential.user.emailVerified) {
+                        errorDiv.textContent = "Please check your email and click the verification link before logging in.";
+                        errorDiv.classList.remove('hidden');
+                        await signOut(auth);
+                        return;
+                    }
+                    authModal.classList.add('hidden');
+                    authForm.reset();
+                } else {
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    await sendEmailVerification(userCredential.user);
+                    successDiv.textContent = "Account created safely! Verification link delivered to your inbox.";
+                    successDiv.classList.remove('hidden');
+                    await signOut(auth);
+                    authForm.reset();
+                }
+            } catch (error) {
+                errorDiv.textContent = error.message.replace("Firebase: ", "");
+                errorDiv.classList.remove('hidden');
+            }
+        });
+
+        document.getElementById('nav-theme-btn').addEventListener('click', () => {
+            const htmlClasses = document.documentElement.classList;
+            const isDark = htmlClasses.contains('dark');
+            
+            const brandLogo = document.getElementById('brand-logo');
+            const sidebarLogo = document.getElementById('sidebar-logo');
+            const themeIcon = document.getElementById('theme-icon');
+
+            if (isDark) {
+                htmlClasses.remove('dark');
+                brandLogo.src = 'https://conifer.ink/img/coniferBlack.png';
+                if(sidebarLogo) sidebarLogo.src = 'https://conifer.ink/img/coniferBlack.png';
+                themeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>';
+            } else {
+                htmlClasses.add('dark');
+                brandLogo.src = 'https://conifer.ink/img/coniferWhite.png';
+                if(sidebarLogo) sidebarLogo.src = 'https://conifer.ink/img/coniferWhite.png';
+                themeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>';
+            }
+        });
+
+        navLibBtn.addEventListener('click', () => {
+            if(libraryView.classList.contains('hidden')) {
+                libraryView.classList.remove('hidden');
+                libraryView.classList.add('flex');
+                landingView.classList.add('hidden');
+            } else {
+                libraryView.classList.add('hidden');
+                libraryView.classList.remove('flex');
+                landingView.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
